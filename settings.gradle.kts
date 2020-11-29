@@ -8,6 +8,6 @@ pluginManagement {
 rootProject.name = "qyoga"
 include("backend:qyoga-exercises")
 include("backend:qyoga-stdlib")
-include("qyoga-app")
+include("backend:qyoga-app")
 include("qyoga-tfx-front")
 include("qyoga-api")
