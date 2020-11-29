@@ -9,6 +9,5 @@ rootProject.name = "qyoga"
 include("backend:qyoga-exercises")
 include("backend:qyoga-stdlib")
 include("qyoga-app")
-include("qyoga-compose-front")
 include("qyoga-tfx-front")
 include("qyoga-api")
