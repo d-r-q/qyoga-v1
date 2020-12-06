@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "gyoga"
-version = "20.12.2"
+version = "20.12.3"
 
 allprojects {
     repositories {

@@ -22,7 +22,7 @@ internal class EbeanExercisesRepository(
         val tags = tagIds.resolve(db).associateBy { it.id }
         val images =
             if (exercises.isNotEmpty()) {
-                findImagesCount(exercises.map { it.id })
+                findImages(exercises.map { it.id })
             } else {
                 emptyMap()
             }
@@ -37,17 +37,17 @@ internal class EbeanExercisesRepository(
             ?.getLong("image_id")
     }
 
-    private fun findImagesCount(exIds: Collection<ExerciseId>): Map<ExerciseId, Int> {
-        val query = """SELECT exercise_id, count(*) cnt
+    private fun findImages(exIds: Collection<ExerciseId>): Map<ExerciseId, List<Long>> {
+        val query = """SELECT exercise_id, image_id 
             |          FROM exercises_images ei 
             |          WHERE ei.exercise_id IN (:ids) 
-            |          GROUP BY exercise_id"""
+            |          ORDER BY index"""
             .trimMargin()
         return db.sqlQuery(query)
             .setParameter("ids", exIds.map { it.value })
-            .mapTo { rs, idx -> ExerciseId(rs.getLong("exercise_id")) to rs.getInt("cnt") }
+            .mapTo { rs, idx -> ExerciseId(rs.getLong("exercise_id")) to rs.getLong("image_id") }
             .findList()
-            .toMap()
+            .groupBy({ it.first }, { it.second })
     }
 
     override fun createExercise(exercise: ExerciseEditDto): ExerciseEditDto {
@@ -73,7 +73,7 @@ internal class EbeanExercisesRepository(
 
 }
 
-private fun StoredExercise.toEditDto(tagsEntities: Map<TagId, StoredTag>, images: Map<ExerciseId, Int>) =
+private fun StoredExercise.toEditDto(tagsEntities: Map<TagId, StoredTag>, images: Map<ExerciseId, List<Long>>) =
     ExerciseEditDto(
         id = this.id.value,
         name = this.name,
@@ -84,7 +84,7 @@ private fun StoredExercise.toEditDto(tagsEntities: Map<TagId, StoredTag>, images
             ApiTag(tagsEntities[it]?.name ?: throw IllegalArgumentException("Cannot resolve tag for id $it"))
         },
         images = images[id]
-            ?.let { to -> (1..to).map { "exercises/${this.id.value}/images/${it}" } }
+            ?.let { it.map { "images/${it}" } }
             ?: emptyList()
     )
 

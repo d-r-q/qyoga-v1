@@ -3,6 +3,7 @@ package qyoga.files
 import qyoga.db.DbModule
 
 class FileService(val dbModule: DbModule) {
+
     fun fetchFile(id: Long): QFile? {
         dbModule.ebeanDb.beginTransaction().use {
             it.isReadOnly = true

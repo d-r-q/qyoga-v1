@@ -8,6 +8,6 @@ class ExercisesCrudModule(dbModule: DbModule, filesModule: FilesModule) {
 
     private val exercisesRepository = EbeanExercisesRepository(dbModule.ebeanDb)
 
-    val exercisesService = ExercisesService(exercisesRepository, filesModule.filesService)
+    val exercisesService = ExercisesService(exercisesRepository)
 
 }
