@@ -2,6 +2,7 @@ package qyoga.exercises
 
 import javafx.collections.FXCollections
 import javafx.geometry.Pos
+import javafx.scene.control.Alert
 import javafx.scene.control.ListCell
 import javafx.scene.control.ListView
 import javafx.scene.image.Image
@@ -137,10 +138,14 @@ class ExercisesDashboardView : View(), CoroutineScope by MainScope() {
 
     override fun onDock() {
         launch(Dispatchers.JavaFx) {
-            val items = exercises.fetch()
-            with(exerciseListView.items) {
-                clear()
-                addAll(items)
+            try {
+                val items = exercises.fetch()
+                with(exerciseListView.items) {
+                    clear()
+                    addAll(items)
+                }
+            } catch (e: Exception) {
+                alert(Alert.AlertType.ERROR, "Ошибка", "Не удалось загрузить список упражнений")
             }
         }
     }
