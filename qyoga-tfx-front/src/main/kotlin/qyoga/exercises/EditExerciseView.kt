@@ -62,11 +62,13 @@ class EditExerciseView : View(), CoroutineScope by MainScope() {
                     textarea {
                         prefWidth = 225.0
                         promptText = "Описание"
+                        isWrapText = true
                         bind(viewModel.descr)
                     }
                     textarea {
                         prefWidth = 225.0
                         promptText = "Инструкция"
+                        isWrapText = true
                         bind(viewModel.instructions)
                     }
                     hbox {
