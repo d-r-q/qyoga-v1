@@ -8,8 +8,11 @@ import io.ktor.client.features.json.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import qyoga.api.exercises.ExerciseEditDto
+import tornadofx.ConfigProperties
 
-class Exercises {
+class Exercises(config: ConfigProperties) {
+
+    private val baseUrl = config["qyoga.client.baseUrl"]
 
     private val client = HttpClient(CIO) {
         install(JsonFeature) {
@@ -23,11 +26,11 @@ class Exercises {
     }
 
     suspend fun fetch(): List<ExerciseEditDto> {
-        return client.get("http://localhost:8090/exercises")
+        return client.get("$baseUrl/exercises")
     }
 
     suspend fun create(exercise: ExerciseEditDto): ExerciseEditDto? {
-        return client.post("http://localhost:8090/exercises") {
+        return client.post("$baseUrl/exercises") {
             body = exercise
         }
     }

@@ -1,6 +1,7 @@
+package qyoga
+
 import javafx.stage.Screen
 import javafx.stage.Stage
-import qyoga.DI
 import qyoga.exercises.Exercises
 import qyoga.exercises.ExercisesDashboardView
 import tornadofx.App
@@ -8,6 +9,7 @@ import tornadofx.FX
 
 
 class QyogaTfxApp : App(ExercisesDashboardView::class) {
+
     override fun start(stage: Stage) {
         super.start(stage)
         FX.dicontainer = DI(initComponents())
@@ -18,6 +20,7 @@ class QyogaTfxApp : App(ExercisesDashboardView::class) {
     }
 
     private fun initComponents(): Set<Exercises> {
-        return setOf(Exercises())
+        return setOf(Exercises(config))
     }
+
 }
