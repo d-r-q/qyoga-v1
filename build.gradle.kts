@@ -8,8 +8,10 @@ plugins {
     id("org.flywaydb.flyway") version "6.4.4" apply false
 }
 
-group = "gyoga"
-version = "20.12.3"
+allprojects {
+    group = "gyoga"
+    version = "20.12.3"
+}
 
 allprojects {
     repositories {
