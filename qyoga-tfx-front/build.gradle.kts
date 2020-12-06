@@ -27,11 +27,12 @@ dependencies {
 }
 
 application {
-    mainClass.value("QyogaTfxApp")
+    mainClass.value("qyoga.QyogaTfxApp")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         jvmTarget = "1.8"
+        freeCompilerArgs += listOf("-Xopt-in=kotlin.time.ExperimentalTime", "-Xopt-in=io.ktor.util.KtorExperimentalAPI")
     }
 }

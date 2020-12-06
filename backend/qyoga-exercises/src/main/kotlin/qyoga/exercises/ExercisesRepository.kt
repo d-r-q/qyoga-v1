@@ -8,4 +8,8 @@ interface ExercisesRepository {
 
     fun fetch(page: ExercisesPage): List<ExerciseEditDto>
 
+    fun findFile(exId: Long, fileIndex: Int): Long?
+
+    fun createExercise(exercise: ExerciseEditDto): ExerciseEditDto
+
 }

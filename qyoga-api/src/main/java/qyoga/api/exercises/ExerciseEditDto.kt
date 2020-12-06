@@ -10,7 +10,7 @@ data class Tag(val tag: String) {
 data class ExerciseEditDto(
     val id: Long?,
     val name: String,
-    val annotation: String,
+    val description: String,
     val instructions: String,
     val duration: Duration,
     val tags: List<Tag>,

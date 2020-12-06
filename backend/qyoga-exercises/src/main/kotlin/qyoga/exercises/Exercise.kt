@@ -8,7 +8,7 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 
-class ExerciseId(override val value: Long) : DomainId<Long, StoredExercise>
+data class ExerciseId(override val value: Long) : DomainId<Long, StoredExercise>
 
 typealias Exercise = ExerciseEntity<ExerciseId?>
 typealias NewExercise = ExerciseEntity<ExerciseId?>
@@ -20,8 +20,8 @@ class ExerciseEntity<ID : ExerciseId?>(
     @Id
     val id: ID,
     val name: String,
-    val annotation: String,
     val description: String,
+    val instructions: String,
     val duration: Duration,
     @DbJsonB
     val tags: List<TagId>

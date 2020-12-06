@@ -10,6 +10,7 @@ repositories {
 }
 
 dependencies {
+    implementation(kotlin("stdlib-jdk8"))
     api(project(":qyoga-api"))
     api(project(":backend:qyoga-stdlib"))
 
