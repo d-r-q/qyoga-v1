@@ -3,12 +3,12 @@ package qyoga.components
 import javafx.event.EventTarget
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
+import qyoga.QyogaTfxApp
 import tornadofx.borderpane
 import tornadofx.imageview
 import tornadofx.onChange
 
-private val imagePlaceholder =
-    Image("file:///home/azhidkov/0my/Alive/qyoga/qg-repo-master/qyoga-tfx-front/src/main/resources/proxy-image.jpg")
+private val imagePlaceholder = Image(QyogaTfxApp::class.java.getResource("/img/image-placeholder.jpg")?.toString())
 
 fun EventTarget.boundedImage(img: Image?, bound: Double, cfg: EventTarget.() -> Unit = {}) = borderpane {
     fun ImageView.rebound() {
