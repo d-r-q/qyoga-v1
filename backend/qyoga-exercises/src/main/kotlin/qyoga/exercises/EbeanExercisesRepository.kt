@@ -19,9 +19,13 @@ internal class EbeanExercisesRepository(
             .setMaxRows(page.amount)
             .findList() as List<StoredExercise>
         val tagIds = exercises.flatMap { it.tags }
-        val resolve = tagIds.resolve(db)
-        val tags = resolve.associateBy { it.id }
-        val images = findImagesCount(exercises.map { it.id })
+        val tags = tagIds.resolve(db).associateBy { it.id }
+        val images =
+            if (exercises.isNotEmpty()) {
+                findImagesCount(exercises.map { it.id })
+            } else {
+                emptyMap()
+            }
         return exercises.map { it.toEditDto(tags, images) }
     }
 
