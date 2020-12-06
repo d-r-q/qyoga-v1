@@ -121,7 +121,7 @@ class EditExerciseView : View(), CoroutineScope by MainScope() {
                     modalJob.await()?.close()
                 }
             if (saveRes == null) {
-                alert(Alert.AlertType.ERROR, "Ошибка", "Упражнение не сохранено")
+                error("Ошибка", "Упражнение не сохранено")
                 return@launch
             }
             returnToDashboard()
