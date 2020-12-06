@@ -178,7 +178,7 @@ object TagsToString : StringConverter<ObservableList<Tag>>() {
 
     override fun fromString(string: String?): ObservableList<Tag>? {
         return string?.let {
-            it.split("#")
+            it.split(",")
                 .map { Tag(it.trim()) }
                 .filter { it.tag.isNotEmpty() }
         }?.asObservable()
