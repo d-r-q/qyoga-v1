@@ -2,7 +2,6 @@ package qyoga.exercises
 
 import javafx.collections.ObservableList
 import javafx.geometry.Pos
-import javafx.scene.control.Alert
 import javafx.scene.layout.Priority
 import javafx.util.StringConverter
 import kotlinx.coroutines.*
@@ -87,7 +86,7 @@ class EditExerciseView : View(), CoroutineScope by MainScope() {
             textfield {
                 prefWidth = 450.0
                 maxWidth = 450.0
-                promptText = "Тэги"
+                promptText = "Тэги: стопы, грудной отдел, вытяжение широчайшей"
                 bind(viewModel.tags, converter = TagsToString)
             }
             hbox {
