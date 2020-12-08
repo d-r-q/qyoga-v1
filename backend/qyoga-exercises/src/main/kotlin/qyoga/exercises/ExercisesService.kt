@@ -12,6 +12,10 @@ class ExercisesService(
         return exercisesRepository.createExercise(exercise)
     }
 
+    fun updateExercise(exercise: ExerciseEditDto) {
+        exercisesRepository.updateExercise(exercise)
+    }
+
     fun getPage(exercisesPage: ExercisesPage): List<ExerciseEditDto> {
         return exercisesRepository.fetch(exercisesPage)
     }

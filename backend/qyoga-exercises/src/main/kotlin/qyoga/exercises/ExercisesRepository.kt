@@ -12,4 +12,5 @@ interface ExercisesRepository {
 
     fun createExercise(exercise: ExerciseEditDto): ExerciseEditDto
 
+    fun updateExercise(exercise: ExerciseEditDto)
 }

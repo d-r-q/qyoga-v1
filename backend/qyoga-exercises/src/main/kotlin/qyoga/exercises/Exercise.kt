@@ -25,5 +25,17 @@ class ExerciseEntity<ID : ExerciseId?>(
     val duration: Duration,
     @DbJsonB
     val tags: List<TagId>
-)
+) {
+
+    fun with(
+        name: String = this.name,
+        description: String = this.description,
+        instructions: String = this.instructions,
+        duration: Duration = this.duration,
+        tags: List<TagId> = this.tags,
+    ): ExerciseEntity<ID> {
+        return ExerciseEntity(id, name, description, instructions, duration, tags)
+    }
+
+}
 

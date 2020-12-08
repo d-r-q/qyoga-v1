@@ -57,6 +57,20 @@ internal class EbeanExercisesRepository(
         return (newExercise as StoredExercise).toEditDto(tags.associateBy { it.id }, emptyMap())
     }
 
+    override fun updateExercise(exercise: ExerciseEditDto) {
+        val tags = mergeTags(exercise.tags).map { it.id }
+        val storedExercise = db.find(ExerciseEntity::class.java, exercise.id) as StoredExercise
+        db.update(
+            storedExercise.with(
+                name = exercise.name,
+                description = exercise.description,
+                instructions = exercise.instructions,
+                duration = exercise.duration,
+                tags = tags,
+            )
+        )
+    }
+
     private fun mergeTags(tags: List<ApiTag>): List<StoredTag> {
         val existingTags = db.find(TagEntity::class.java)
             .where()
