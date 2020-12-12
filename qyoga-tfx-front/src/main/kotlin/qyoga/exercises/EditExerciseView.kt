@@ -111,7 +111,7 @@ class EditExerciseView : View(), CoroutineScope by MainScope() {
 
     private fun saveExercise() {
         launch {
-            val saveJob = async { exercises.create(viewModel.toDto()) }
+            val saveJob = async { exercises.send(viewModel.toDto()) }
             val modalJob = async { find<SavingDialog>().openModal(escapeClosesWindow = false) }
             val saveRes =
                 try {
@@ -142,6 +142,7 @@ class EditExerciseView : View(), CoroutineScope by MainScope() {
 
 class EditExerciseViewModel(dest: ExerciseEditDto) : ViewModel() {
 
+    private var id: Long? = null
     val name = stringProperty(dest.name)
     val descr = stringProperty(dest.description)
     val instructions = stringProperty(dest.instructions)
@@ -151,6 +152,7 @@ class EditExerciseViewModel(dest: ExerciseEditDto) : ViewModel() {
     val image2 = stringProperty(dest.images.getOrNull(1))
 
     fun setupFrom(dest: ExerciseEditDto) {
+        id = dest.id
         name.set(dest.name)
         descr.set(dest.description)
         instructions.set(dest.instructions)
@@ -162,13 +164,13 @@ class EditExerciseViewModel(dest: ExerciseEditDto) : ViewModel() {
 
     fun toDto(): ExerciseEditDto {
         return ExerciseEditDto(
-            null,
-            name.get(),
-            descr.get(),
-            instructions.get(),
-            Duration.ofSeconds(duration.get().toLong()),
-            tags.get(),
-            emptyList()
+                id,
+                name.get(),
+                descr.get(),
+                instructions.get(),
+                Duration.ofSeconds(duration.get().toLong()),
+                tags.get(),
+                emptyList()
         )
     }
 }

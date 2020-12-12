@@ -127,7 +127,13 @@ class ExercisesDashboardView : View(), CoroutineScope by MainScope() {
                     hbox {
                         paddingAll = 5.0
                         spacing = 10.0
-                        button("\uD83D\uDD89")
+                        button("\uD83D\uDD89") {
+                            action {
+                                val scope = EditExerciseViewScope(it)
+                                val editView = find<EditExerciseView>(scope)
+                                replaceWith(editView, ViewTransition.Explode(0.5.seconds))
+                            }
+                        }
                         button("\uD83D\uDDD1")
                     }
                 }

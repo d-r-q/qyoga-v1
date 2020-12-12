@@ -1,14 +1,18 @@
 package qyoga.exercises
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.features.*
-import io.ktor.client.features.json.*
-import io.ktor.client.request.*
-import io.ktor.http.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.features.defaultRequest
+import io.ktor.client.features.json.JacksonSerializer
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import qyoga.api.exercises.ExerciseEditDto
-import tornadofx.ConfigProperties
+import tornadofx.*
 
 class Exercises(config: ConfigProperties) {
 
@@ -29,9 +33,17 @@ class Exercises(config: ConfigProperties) {
         return client.get("$baseUrl/exercises")
     }
 
-    suspend fun create(exercise: ExerciseEditDto): ExerciseEditDto? {
-        return client.post("$baseUrl/exercises") {
-            body = exercise
+    suspend fun send(exercise: ExerciseEditDto): Boolean {
+        return if (exercise.id == null) {
+            client.post<Any>("$baseUrl/exercises") {
+                body = exercise
+            }
+            true
+        } else {
+            client.put<Any>("$baseUrl/exercises/${exercise.id}") {
+                body = exercise
+            }
+            true
         }
     }
 
