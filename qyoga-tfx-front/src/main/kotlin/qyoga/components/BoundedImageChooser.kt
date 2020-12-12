@@ -54,7 +54,9 @@ class BoundedImageChooser : Fragment("Bounded Image Chooser") {
 
     val imgUrlProperty = stringProperty(null)
 
-    private val imageView = (root.children[0] as BorderPane).center as ImageView
+    private val imageView = ((root.children[0] as BorderPane).center as ImageView).apply {
+        imgUrlProperty.addListener { _, _, newValue -> this@apply.image = Image(newValue) }
+    }
 
     private fun onImageSelected(url: String) {
         imgUrlProperty.set(url)

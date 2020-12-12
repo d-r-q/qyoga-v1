@@ -53,7 +53,9 @@ class EditExerciseView : View(), CoroutineScope by MainScope() {
                     boundedImageChooser(bound = 300.0) {
                         bindStringProperty(imgUrlProperty, null, null, viewModel.image1, false)
                     }
-                    boundedImageChooser(bound = 300.0)
+                    boundedImageChooser(bound = 300.0) {
+                        bindStringProperty(imgUrlProperty, null, null, viewModel.image2, false)
+                    }
                 }
                 vbox {
                     spacing = 35.0
@@ -154,8 +156,8 @@ class EditExerciseViewModel(dest: ExerciseEditDto) : ViewModel() {
         instructions.set(dest.instructions)
         duration.set(dest.duration.seconds.toInt())
         tags.set(dest.tags.asObservable())
-        image1.set(dest.images.getOrNull(0))
-        image2.set(dest.images.getOrNull(1))
+        image1.set(dest.images.getOrNull(0)?.let { "http://localhost:8090/$it" })
+        image2.set(dest.images.getOrNull(1)?.let { "http://localhost:8090/$it" })
     }
 
     fun toDto(): ExerciseEditDto {
