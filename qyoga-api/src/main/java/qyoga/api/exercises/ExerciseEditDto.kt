@@ -5,6 +5,7 @@ import java.time.Duration
 data class Tag(val tag: String) {
 
     override fun toString() = "#$tag"
+
 }
 
 data class ExerciseEditDto(

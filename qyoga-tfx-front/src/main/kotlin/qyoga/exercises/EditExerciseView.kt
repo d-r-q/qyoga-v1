@@ -178,14 +178,16 @@ val newEditExerciseModel = ExerciseEditDto(null, "", "", "", Duration.ZERO, empt
 object TagsToString : StringConverter<ObservableList<Tag>>() {
 
     override fun fromString(string: String?): ObservableList<Tag>? {
-        return string?.let {
-            it.split(",")
-                .map { Tag(it.trim()) }
+        if (string == null) {
+            return null
+        }
+        return string.split(",")
+                .map { Tag(it.trim().removePrefix("#")) }
                 .filter { it.tag.isNotEmpty() }
-        }?.asObservable()
+                .asObservable()
     }
 
     override fun toString(lst: ObservableList<Tag>?): String {
-        return lst?.joinToString(" ") ?: ""
+        return lst?.joinToString(", ") ?: ""
     }
 }
