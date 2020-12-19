@@ -30,7 +30,7 @@ class ExercisesDashboardView : View(), CoroutineScope by MainScope() {
                 paddingAll = 15.0
                 left = button("Добавить") {
                     action {
-                        val scope = EditExerciseViewScope(newEditExerciseModel)
+                        val scope = EditExerciseViewScope(newEditExerciseModel, exercises::imageUrls)
                         val editView = find<EditExerciseView>(scope)
                         replaceWith(editView, ViewTransition.Explode(0.5.seconds))
                     }
@@ -129,7 +129,7 @@ class ExercisesDashboardView : View(), CoroutineScope by MainScope() {
                         spacing = 10.0
                         button("\uD83D\uDD89") {
                             action {
-                                val scope = EditExerciseViewScope(it)
+                                val scope = EditExerciseViewScope(it, exercises::imageUrls)
                                 val editView = find<EditExerciseView>(scope)
                                 replaceWith(editView, ViewTransition.Explode(0.5.seconds))
                             }

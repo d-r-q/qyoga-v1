@@ -2,6 +2,7 @@ package qyoga
 
 import javafx.stage.Screen
 import javafx.stage.Stage
+import qyoga.exercises.EditExerciseController
 import qyoga.exercises.Exercises
 import qyoga.exercises.ExercisesDashboardView
 import tornadofx.App
@@ -19,8 +20,8 @@ class QyogaTfxApp : App(ExercisesDashboardView::class) {
         stage.y = (Screen.getPrimary().visualBounds.height - 1080.0) / 2
     }
 
-    private fun initComponents(): Set<Exercises> {
-        return setOf(Exercises(config))
+    private fun initComponents(): Set<Any> {
+        return setOf(Exercises(config), EditExerciseController())
     }
 
 }

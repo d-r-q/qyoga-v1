@@ -10,14 +10,12 @@ import qyoga.api.exercises.ExerciseEditDto
 import qyoga.api.exercises.Tag
 import qyoga.components.boundedImageChooser
 import tornadofx.*
-import java.io.File
-import java.net.URI
-import java.nio.file.Files
 import java.time.Duration
-import java.util.concurrent.TimeUnit
-import kotlin.time.toDuration
 
-data class EditExerciseViewScope(val exercise: ExerciseEditDto) : Scope()
+data class EditExerciseViewScope(
+    val exercise: ExerciseEditDto,
+    val resolveImageUrl: ExerciseEditDto.() -> List<String>
+) : Scope()
 
 class SavingDialog : Fragment() {
 
@@ -36,7 +34,7 @@ class EditExerciseView : View(), CoroutineScope by MainScope() {
 
     private val viewModel = EditExerciseViewModel(newEditExerciseModel)
 
-    private val exercises: Exercises by di()
+    private val controller: EditExerciseController by di()
 
     override val root = form {
         paddingAll = 35.0
@@ -100,65 +98,26 @@ class EditExerciseView : View(), CoroutineScope by MainScope() {
                 alignment = Pos.BOTTOM_RIGHT
                 button("Отменить") {
                     action {
-                        returnToDashboard()
+                        val andThen = controller.cancel()
+                        andThen()
                     }
                 }
                 spacer()
                 button("Сохранить") {
                     action {
-                        saveExercise()
+                        launch {
+                            val andThen = controller.saveExercise(this@EditExerciseView, viewModel)
+                            andThen()
+                        }
                     }
                 }
             }
         }
-    }
-
-    private fun saveExercise() {
-        launch {
-            val saveJob = async {
-                val imageIds = viewModel.images().map {
-                    when (it) {
-                        is ImageUrl -> {
-                            val file = File(URI(it.url))
-                            exercises.upload(
-                                file.name,
-                                ContentType.parse(Files.probeContentType(file.toPath())),
-                                file
-                            )
-                        }
-                        is ImageId -> {
-                            it.id
-                        }
-                    }
-                }
-                val res = exercises.send(viewModel.toDto().copy(images = imageIds))
-                println("Got $res")
-                res
-            }
-            val modalJob = async { find<SavingDialog>().openModal(escapeClosesWindow = false) }
-            val saveRes =
-                try {
-                    withTimeoutOrNull(5.toDuration(TimeUnit.SECONDS)) {
-                        saveJob.await()
-                    }
-                } finally {
-                    modalJob.await()?.close()
-                }
-            if (saveRes == null) {
-                error("Ошибка", "Упражнение не сохранено")
-                return@launch
-            }
-            returnToDashboard()
-        }
-    }
-
-    private fun returnToDashboard() {
-        replaceWith<ExercisesDashboardView>(ViewTransition.Explode(0.5.seconds))
     }
 
     override fun onDock() {
         super.onDock()
-        viewModel.setupFrom(scope.exercise, exercises::imageUrls)
+        viewModel.setupFrom(scope.exercise, scope.resolveImageUrl)
     }
 
 }
