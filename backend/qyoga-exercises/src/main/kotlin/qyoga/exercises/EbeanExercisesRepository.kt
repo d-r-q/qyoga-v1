@@ -86,6 +86,10 @@ internal class EbeanExercisesRepository(
             deleteCurrent.setParameter("id", id.value)
             deleteCurrent.executeNow()
 
+            if (exerciseImages.isEmpty()) {
+                return Ok
+            }
+
             val insertNew = db.sqlUpdate(
                 "INSERT INTO exercises_images (exercise_id, image_id, index) VALUES (:ex_id, :img_id, :idx)"
             )
