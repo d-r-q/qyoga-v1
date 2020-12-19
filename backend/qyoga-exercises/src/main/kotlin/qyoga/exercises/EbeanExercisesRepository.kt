@@ -1,10 +1,7 @@
 package qyoga.exercises
 
 import io.ebean.Database
-import qyoga.Failure
-import qyoga.Ok
-import qyoga.Outcome
-import qyoga.Success
+import qyoga.*
 import qyoga.api.exercises.ExerciseEditDto
 import qyoga.db.DomainIdConverter
 import qyoga.db.resolve
@@ -55,7 +52,7 @@ internal class EbeanExercisesRepository(
             .groupBy({ it.first }, { it.second })
     }
 
-    override fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto, Throwable> {
+    override fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto, Exception> = ergo {
         val tags = mergeTags(exercise.tags)
         val storedEntity = with(exercise.toEntity(tags.map { it.id })) {
             if (this.id == null) {
@@ -83,7 +80,7 @@ internal class EbeanExercisesRepository(
         return existingTags + (missingTags as List<StoredTag>)
     }
 
-    private fun updateExerciseImages(id: ExerciseId, exerciseImages: List<Long>): Outcome<Any, Throwable> {
+    private fun updateExerciseImages(id: ExerciseId, exerciseImages: List<Long>): Outcome<Any, Exception> {
         try {
             val deleteCurrent = db.sqlUpdate("DELETE FROM exercises_images ei WHERE ei.exercise_id = :id")
             deleteCurrent.setParameter("id", id.value)

@@ -19,7 +19,7 @@ fun panic(msg: String): Nothing = throw AssertionError(msg)
  * or when handler do not interested in actual outcome (e.g. error logging interceptor)
  */
 @Suppress("UNCHECKED_CAST")
-sealed class Outcome<out R : Any?, out E : Throwable> {
+sealed class Outcome<out R : Any?, out E : Exception> {
 
     inline fun onError(body: (GenericFailure<R, E>) -> Nothing): R {
         return when (this) {
@@ -50,7 +50,7 @@ sealed class Outcome<out R : Any?, out E : Throwable> {
 /**
  * Success outcome base
  */
-sealed class GenericSuccess<T>(val result: T) : Outcome<T, Throwable>() {
+sealed class GenericSuccess<T>(val result: T) : Outcome<T, Exception>() {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -76,7 +76,7 @@ sealed class GenericSuccess<T>(val result: T) : Outcome<T, Throwable>() {
 /**
  * Failure outcome base
  */
-sealed class GenericFailure<out R, out T : Throwable>(val message: String? = null, val cause: T) :
+sealed class GenericFailure<out R, out T : Exception>(val message: String? = null, val cause: T) :
     Outcome<Nothing, T>() {
 
     override fun equals(other: Any?): Boolean {
@@ -113,13 +113,22 @@ object Ok : GenericSuccess<Any>(Unit)
  */
 open class Success<T>(value: T) : GenericSuccess<T>(value)
 
+fun <T> Ok(value: T) = Success(value)
+
 /**
  * Base type for application-specific failure outcomes. May be used itself, if function has single kind of failure outcome
  */
-open class Failure<T : Throwable>(message: String? = null, cause: T) : GenericFailure<Nothing, T>(message, cause)
+open class Failure<T : Exception>(message: String? = null, cause: T) : GenericFailure<Nothing, T>(message, cause)
 
 @Suppress("NOTHING_TO_INLINE")
 /**
  * Shorthand factory for Failure, using kotlin.Exception with the same message as actual cause
  */
-inline fun <T> Failure(msg: String): Outcome<T, Throwable> = Failure<Throwable>(msg, Exception(msg))
+inline fun <T> Failure(msg: String): Outcome<T, Exception> = Failure(msg, Exception(msg))
+
+inline fun <R> ergo(body: () -> Outcome<R, Exception>): Outcome<R, Exception> =
+    try {
+        body()
+    } catch (e: Exception) {
+        Failure(cause = e)
+    }

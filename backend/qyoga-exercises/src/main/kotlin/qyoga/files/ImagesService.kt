@@ -1,14 +1,15 @@
 package qyoga.files
 
-import qyoga.Failure
-import qyoga.Outcome
-import qyoga.Success
+import qyoga.*
 import qyoga.db.DbModule
+import qyoga.domain.DomainId
 import java.sql.Statement
+
+data class ImageId(override val value: Long) : DomainId<Long, Image>
 
 class ImagesService(private val dbModule: DbModule) {
 
-    fun fetch(id: Long): Image? = dbModule.transaction {
+    fun fetch(id: Long): Outcome<Image?, Exception> = dbModule.transaction {
         it.isReadOnly = true
         with(it.connection) {
             val stmt = prepareStatement("SELECT name, content_type, content FROM images WHERE id = ?").apply {
@@ -17,14 +18,14 @@ class ImagesService(private val dbModule: DbModule) {
             val rs = stmt.executeQuery()
             val found = rs.next()
             if (!found) {
-                return@transaction null
+                return@transaction NotFound(ImageId(id))
             }
 
-            Image(rs.getString("name"), rs.getString("content_type"), rs.getBytes("content"))
+            Ok(Image(rs.getString("name"), rs.getString("content_type"), rs.getBytes("content")))
         }
     }
 
-    fun save(img: Image): Outcome<Long, Throwable> = dbModule.transaction {
+    fun save(img: Image): Outcome<Long, Exception> = dbModule.transaction {
         try {
             val stmt = it.connection.prepareStatement(
                 "INSERT INTO images (name, content_type, content) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS

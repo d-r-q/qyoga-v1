@@ -11,6 +11,6 @@ interface ExercisesRepository {
 
     fun findFile(exId: Long, fileIndex: Int): Long?
 
-    fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto, Throwable>
+    fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto, Exception>
 
 }

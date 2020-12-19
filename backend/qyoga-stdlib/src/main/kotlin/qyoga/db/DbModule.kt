@@ -6,6 +6,9 @@ import io.ebean.Transaction
 import io.ebean.config.DatabaseConfig
 import org.flywaydb.core.Flyway
 import org.postgresql.ds.PGSimpleDataSource
+import qyoga.Failure
+import qyoga.GenericSuccess
+import qyoga.Outcome
 import qyoga.QEnv
 
 
@@ -35,11 +38,17 @@ class DbModule(private val env: QEnv) {
         flyway.migrate()
     }
 
-    inline fun <T> transaction(crossinline body: (Transaction) -> T): T {
+    inline fun <T> transaction(crossinline body: (Transaction) -> Outcome<T, *>): Outcome<T, *> {
         return ebeanDb.beginTransaction().use {
-            val res = body(it)
-            it.commit()
-            res
+            try {
+                val res = body(it)
+                if (res is GenericSuccess) {
+                    it.commit()
+                }
+                res
+            } catch (e: Exception) {
+                Failure(cause = e)
+            }
         }
     }
 
