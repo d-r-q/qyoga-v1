@@ -22,8 +22,11 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
     implementation("io.ktor:ktor-client-jackson:$ktor_version")
+    implementation("io.ktor:ktor-client-logging:$ktor_version")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.10.2")
+    implementation("com.squareup.okhttp3:okhttp:4.9.0")
 
+    implementation("ch.qos.logback:logback-classic:1.2.3")
 }
 
 application {

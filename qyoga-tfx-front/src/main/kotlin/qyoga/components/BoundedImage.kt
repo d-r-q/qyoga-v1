@@ -8,7 +8,8 @@ import tornadofx.borderpane
 import tornadofx.imageview
 import tornadofx.onChange
 
-private val imagePlaceholder = Image(QyogaTfxApp::class.java.getResource("/img/image-placeholder.jpg")?.toString())
+internal val imagePlaceholderUrl = QyogaTfxApp::class.java.getResource("/img/image-placeholder.jpg")
+internal val imagePlaceholder = Image(imagePlaceholderUrl.toString())
 
 fun EventTarget.boundedImage(img: Image?, bound: Double, cfg: EventTarget.() -> Unit = {}) = borderpane {
     fun ImageView.rebound() {

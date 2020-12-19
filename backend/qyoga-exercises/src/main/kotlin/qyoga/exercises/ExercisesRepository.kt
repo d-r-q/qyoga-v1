@@ -1,5 +1,6 @@
 package qyoga.exercises
 
+import qyoga.Outcome
 import qyoga.api.exercises.ExerciseEditDto
 
 class ExercisesPage(val sinceName: String?, val amount: Int)
@@ -10,7 +11,6 @@ interface ExercisesRepository {
 
     fun findFile(exId: Long, fileIndex: Int): Long?
 
-    fun createExercise(exercise: ExerciseEditDto): ExerciseEditDto
+    fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto, Throwable>
 
-    fun updateExercise(exercise: ExerciseEditDto)
 }

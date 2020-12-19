@@ -1,6 +1,10 @@
 package qyoga.exercises
 
 import io.ebean.Database
+import qyoga.Failure
+import qyoga.Ok
+import qyoga.Outcome
+import qyoga.Success
 import qyoga.api.exercises.ExerciseEditDto
 import qyoga.db.DomainIdConverter
 import qyoga.db.resolve
@@ -16,6 +20,7 @@ internal class EbeanExercisesRepository(
         val exercises = db.find(ExerciseEntity::class.java)
             .where()
             .ge("name", page.sinceName ?: "a")
+            .orderBy("name")
             .setMaxRows(page.amount)
             .findList() as List<StoredExercise>
         val tagIds = exercises.flatMap { it.tags }
@@ -26,7 +31,7 @@ internal class EbeanExercisesRepository(
             } else {
                 emptyMap()
             }
-        return exercises.map { it.toEditDto(tags, images) }
+        return exercises.map { it.toEditDto(tags, images[it.id] ?: emptyList()) }
     }
 
     override fun findFile(exId: Long, fileIndex: Int): Long? {
@@ -45,30 +50,23 @@ internal class EbeanExercisesRepository(
             .trimMargin()
         return db.sqlQuery(query)
             .setParameter("ids", exIds.map { it.value })
-            .mapTo { rs, idx -> ExerciseId(rs.getLong("exercise_id")) to rs.getLong("image_id") }
+            .mapTo { rs, _ -> ExerciseId(rs.getLong("exercise_id")) to rs.getLong("image_id") }
             .findList()
             .groupBy({ it.first }, { it.second })
     }
 
-    override fun createExercise(exercise: ExerciseEditDto): ExerciseEditDto {
+    override fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto, Throwable> {
         val tags = mergeTags(exercise.tags)
-        val newExercise = NewExercise(exercise, tags.map { it.id })
-        db.save(newExercise)
-        return (newExercise as StoredExercise).toEditDto(tags.associateBy { it.id }, emptyMap())
-    }
-
-    override fun updateExercise(exercise: ExerciseEditDto) {
-        val tags = mergeTags(exercise.tags).map { it.id }
-        val storedExercise = db.find(ExerciseEntity::class.java, exercise.id) as StoredExercise
-        db.update(
-            storedExercise.with(
-                name = exercise.name,
-                description = exercise.description,
-                instructions = exercise.instructions,
-                duration = exercise.duration,
-                tags = tags,
-            )
-        )
+        val storedEntity = with(exercise.toEntity(tags.map { it.id })) {
+            if (this.id == null) {
+                db.save(this)
+            } else {
+                db.update(this)
+            }
+            this as StoredExercise
+        }
+        updateExerciseImages(storedEntity.id, exercise.images).onError { return it }
+        return Success(storedEntity.toEditDto(tags.associateBy { it.id }, exercise.images))
     }
 
     private fun mergeTags(tags: List<ApiTag>): List<StoredTag> {
@@ -85,9 +83,34 @@ internal class EbeanExercisesRepository(
         return existingTags + (missingTags as List<StoredTag>)
     }
 
+    private fun updateExerciseImages(id: ExerciseId, exerciseImages: List<Long>): Outcome<Any, Throwable> {
+        try {
+            val deleteCurrent = db.sqlUpdate("DELETE FROM exercises_images ei WHERE ei.exercise_id = :id")
+            deleteCurrent.setParameter("id", id.value)
+            deleteCurrent.executeNow()
+
+            val insertNew = db.sqlUpdate(
+                "INSERT INTO exercises_images (exercise_id, image_id, index) VALUES (:ex_id, :img_id, :idx)"
+            )
+            for ((idx, imgId) in exerciseImages.withIndex()) {
+                with(insertNew) {
+                    setParameter("ex_id", id.value)
+                    setParameter("img_id", imgId)
+                    setParameter("idx", idx)
+                    addBatch()
+                }
+            }
+
+            insertNew.executeBatch()
+            return Ok
+        } catch (e: Exception) {
+            return Failure("Exercise images updating failed", e)
+        }
+    }
+
 }
 
-private fun StoredExercise.toEditDto(tagsEntities: Map<TagId, StoredTag>, images: Map<ExerciseId, List<Long>>) =
+private fun StoredExercise.toEditDto(tagsEntities: Map<TagId, StoredTag>, images: List<Long>) =
     ExerciseEditDto(
         id = this.id.value,
         name = this.name,
@@ -97,13 +120,18 @@ private fun StoredExercise.toEditDto(tagsEntities: Map<TagId, StoredTag>, images
         tags = this.tags.map {
             ApiTag(tagsEntities[it]?.name ?: throw IllegalArgumentException("Cannot resolve tag for id $it"))
         },
-        images = images[id]
-            ?.let { it.map { "images/${it}" } }
-            ?: emptyList()
+        images = images
     )
 
-fun NewExercise(exercise: ExerciseEditDto, tags: List<TagId>): NewExercise {
-    return NewExercise(null, exercise.name, exercise.description, exercise.instructions, exercise.duration, tags)
+fun ExerciseEditDto.toEntity(tags: List<TagId>): Exercise {
+    return Exercise(
+        id?.let { ExerciseId(it) },
+        name,
+        description,
+        instructions,
+        duration,
+        tags
+    )
 }
 
 class ExerciseIdConverter : DomainIdConverter<ExerciseId, Long, StoredExercise>(::ExerciseId)

@@ -97,7 +97,7 @@ class ExercisesDashboardView : View(), CoroutineScope by MainScope() {
                     hgrow = Priority.ALWAYS
                     spacing = 15.0
 
-                    val url = it.images.firstOrNull()?.let { "http://localhost:8090/$it" }
+                    val url = exercises.imageUrls(it).firstOrNull()
                     boundedImage(url?.let { Image(it) }, 300.0)
 
                     vbox {

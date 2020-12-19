@@ -8,17 +8,18 @@ import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.jackson.*
 import io.ktor.routing.*
+import org.slf4j.event.Level
 import qyoga.db.DbModule
 import qyoga.exercises.ExercisesCrudModule
-import qyoga.files.FilesModule
-import qyoga.routing.ExercisesCrudRouter
-import qyoga.routing.FilesRouter
+import qyoga.files.ImagesModule
+import qyoga.routing.ExercisesCrudRouter.exercises
+import qyoga.routing.ImagesRouter.images
 
 class QyogaModule(env: QEnv) {
 
     val dbModule = DbModule(env)
-    val filesModule = FilesModule(dbModule)
-    val exercisesModule = ExercisesCrudModule(dbModule, filesModule)
+    val filesModule = ImagesModule(dbModule)
+    val exercisesModule = ExercisesCrudModule(dbModule)
 
 }
 
@@ -36,9 +37,11 @@ fun Application.main() {
         }
     }
     install(DefaultHeaders)
-    install(CallLogging)
+    install(CallLogging) {
+        level = Level.TRACE
+    }
     install(Routing) {
-        ExercisesCrudRouter.mount(qyoga.exercisesModule)()
-        FilesRouter.mount(qyoga.filesModule)()
+        exercises(qyoga.exercisesModule)
+        images(qyoga.filesModule)
     }
 }

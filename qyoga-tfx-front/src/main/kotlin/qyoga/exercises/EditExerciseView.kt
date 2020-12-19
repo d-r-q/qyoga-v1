@@ -1,5 +1,6 @@
 package qyoga.exercises
 
+import io.ktor.http.*
 import javafx.collections.ObservableList
 import javafx.geometry.Pos
 import javafx.scene.layout.Priority
@@ -9,6 +10,9 @@ import qyoga.api.exercises.ExerciseEditDto
 import qyoga.api.exercises.Tag
 import qyoga.components.boundedImageChooser
 import tornadofx.*
+import java.io.File
+import java.net.URI
+import java.nio.file.Files
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.time.toDuration
@@ -111,7 +115,26 @@ class EditExerciseView : View(), CoroutineScope by MainScope() {
 
     private fun saveExercise() {
         launch {
-            val saveJob = async { exercises.send(viewModel.toDto()) }
+            val saveJob = async {
+                val imageIds = viewModel.images().map {
+                    when (it) {
+                        is ImageUrl -> {
+                            val file = File(URI(it.url))
+                            exercises.upload(
+                                file.name,
+                                ContentType.parse(Files.probeContentType(file.toPath())),
+                                file
+                            )
+                        }
+                        is ImageId -> {
+                            it.id
+                        }
+                    }
+                }
+                val res = exercises.send(viewModel.toDto().copy(images = imageIds))
+                println("Got $res")
+                res
+            }
             val modalJob = async { find<SavingDialog>().openModal(escapeClosesWindow = false) }
             val saveRes =
                 try {
@@ -135,12 +158,12 @@ class EditExerciseView : View(), CoroutineScope by MainScope() {
 
     override fun onDock() {
         super.onDock()
-        viewModel.setupFrom(scope.exercise)
+        viewModel.setupFrom(scope.exercise, exercises::imageUrls)
     }
 
 }
 
-class EditExerciseViewModel(dest: ExerciseEditDto) : ViewModel() {
+class EditExerciseViewModel(var dest: ExerciseEditDto) : ViewModel() {
 
     private var id: Long? = null
     val name = stringProperty(dest.name)
@@ -148,29 +171,38 @@ class EditExerciseViewModel(dest: ExerciseEditDto) : ViewModel() {
     val instructions = stringProperty(dest.instructions)
     val duration = intProperty(dest.duration.seconds.toInt())
     val tags = listProperty(dest.tags.asObservable())
-    val image1 = stringProperty(dest.images.getOrNull(0))
-    val image2 = stringProperty(dest.images.getOrNull(1))
+    val image1 = stringProperty(null)
+    val image2 = stringProperty(null)
 
-    fun setupFrom(dest: ExerciseEditDto) {
+    fun setupFrom(dest: ExerciseEditDto, resolveImageUrls: ExerciseEditDto.() -> List<String>) {
+        this.dest = dest
         id = dest.id
         name.set(dest.name)
         descr.set(dest.description)
         instructions.set(dest.instructions)
         duration.set(dest.duration.seconds.toInt())
         tags.set(dest.tags.asObservable())
-        image1.set(dest.images.getOrNull(0)?.let { "http://localhost:8090/$it" })
-        image2.set(dest.images.getOrNull(1)?.let { "http://localhost:8090/$it" })
+        val imageUrls = resolveImageUrls(dest)
+        image1.set(imageUrls.getOrNull(0))
+        image2.set(imageUrls.getOrNull(1))
     }
 
     fun toDto(): ExerciseEditDto {
         return ExerciseEditDto(
-                id,
-                name.get(),
-                descr.get(),
-                instructions.get(),
-                Duration.ofSeconds(duration.get().toLong()),
-                tags.get(),
-                emptyList()
+            id,
+            name.get(),
+            descr.get(),
+            instructions.get(),
+            Duration.ofSeconds(duration.get().toLong()),
+            tags.get(),
+            emptyList()
+        )
+    }
+
+    fun images(): List<Img> {
+        return listOfNotNull(
+            image1.get()?.let { if (it.startsWith("http")) ImageId(dest.images[0]) else ImageUrl(it) },
+            image2.get()?.let { if (it.startsWith("http")) ImageId(dest.images[1]) else ImageUrl(it) }
         )
     }
 }

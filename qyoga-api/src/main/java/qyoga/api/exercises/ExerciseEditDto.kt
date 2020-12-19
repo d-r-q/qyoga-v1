@@ -15,5 +15,10 @@ data class ExerciseEditDto(
     val instructions: String,
     val duration: Duration,
     val tags: List<Tag>,
-    val images: List<String>
-)
+    val images: List<Long>
+) {
+
+    fun imageUrls(baseUrl: String) = images.map { "$baseUrl/images/$it" }
+
+}
+
