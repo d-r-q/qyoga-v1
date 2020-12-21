@@ -52,7 +52,7 @@ internal class EbeanExercisesRepository(
             .groupBy({ it.first }, { it.second })
     }
 
-    override fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto, Exception> = ergo {
+    override fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto> = ergo {
         val tags = mergeTags(exercise.tags)
         val storedEntity = with(exercise.toEntity(tags.map { it.id })) {
             if (this.id == null) {
@@ -62,7 +62,8 @@ internal class EbeanExercisesRepository(
             }
             this as StoredExercise
         }
-        updateExerciseImages(storedEntity.id, exercise.images).onError { return it }
+        updateExerciseImages(storedEntity.id, exercise.images)
+            .ifError { return it }
         return Success(storedEntity.toEditDto(tags.associateBy { it.id }, exercise.images))
     }
 
@@ -80,7 +81,7 @@ internal class EbeanExercisesRepository(
         return existingTags + (missingTags as List<StoredTag>)
     }
 
-    private fun updateExerciseImages(id: ExerciseId, exerciseImages: List<Long>): Outcome<Any, Exception> {
+    private fun updateExerciseImages(id: ExerciseId, exerciseImages: List<Long>): Outcome<Any> {
         try {
             val deleteCurrent = db.sqlUpdate("DELETE FROM exercises_images ei WHERE ei.exercise_id = :id")
             deleteCurrent.setParameter("id", id.value)
@@ -105,7 +106,7 @@ internal class EbeanExercisesRepository(
             insertNew.executeBatch()
             return Ok
         } catch (e: Exception) {
-            return Failure("Exercise images updating failed", e)
+            return Failure(e, "Exercise images updating failed")
         }
     }
 

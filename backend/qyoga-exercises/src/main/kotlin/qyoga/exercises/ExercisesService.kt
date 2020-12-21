@@ -10,7 +10,7 @@ class ExercisesService(
     private val exercisesRepository: ExercisesRepository
 ) {
 
-    fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto, Exception> {
+    fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto> {
         return dbModule.transaction {
             exercisesRepository.persistExercise(exercise)
         }

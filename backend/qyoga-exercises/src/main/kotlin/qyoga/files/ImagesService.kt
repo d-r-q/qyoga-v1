@@ -9,7 +9,7 @@ data class ImageId(override val value: Long) : DomainId<Long, Image>
 
 class ImagesService(private val dbModule: DbModule) {
 
-    fun fetch(id: Long): Outcome<Image?, Exception> = dbModule.transaction {
+    fun fetch(id: Long): Outcome<Image> = dbModule.transaction {
         it.isReadOnly = true
         with(it.connection) {
             val stmt = prepareStatement("SELECT name, content_type, content FROM images WHERE id = ?").apply {
@@ -25,7 +25,7 @@ class ImagesService(private val dbModule: DbModule) {
         }
     }
 
-    fun save(img: Image): Outcome<Long, Exception> = dbModule.transaction {
+    fun save(img: Image): Outcome<Long> = dbModule.transaction {
         try {
             val stmt = it.connection.prepareStatement(
                 "INSERT INTO images (name, content_type, content) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS
@@ -41,7 +41,7 @@ class ImagesService(private val dbModule: DbModule) {
             }
             Success(id)
         } catch (e: Exception) {
-            Failure("Image persisting failed", e)
+            Failure(e, "Image persisting failed")
         }
     }
 

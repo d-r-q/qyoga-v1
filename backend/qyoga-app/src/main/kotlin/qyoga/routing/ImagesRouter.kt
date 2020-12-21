@@ -18,14 +18,11 @@ object ImagesRouter {
         route("images") {
             get("/{id}") {
                 val id: Long by call.parameters
-                val file = imagesModule.imagesService.fetch(id).onError {
-                    respond(it)
-                    return@get
-                }
-                if (file == null) {
-                    call.respond(HttpStatusCode.NoContent, "Image with id $id not found")
-                    return@get
-                }
+                val file = imagesModule.imagesService.fetch(id)
+                    .ifError {
+                        respond(it)
+                        return@get
+                    }
 
                 call.respondBytes(ContentType.parse(file.mimeType), HttpStatusCode.OK) {
                     file.content

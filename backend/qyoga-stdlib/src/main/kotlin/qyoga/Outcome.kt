@@ -19,19 +19,19 @@ fun panic(msg: String): Nothing = throw AssertionError(msg)
  * or when handler do not interested in actual outcome (e.g. error logging interceptor)
  */
 @Suppress("UNCHECKED_CAST")
-sealed class Outcome<out R : Any?, out E : Exception> {
+sealed class Outcome<out R : Any?> {
 
-    inline fun onError(body: (GenericFailure<R, E>) -> Nothing): R {
+    inline fun ifError(body: (GenericFailure<R>) -> Nothing): R {
         return when (this) {
-            is GenericSuccess -> result
-            is GenericFailure<*, *> -> body(this as GenericFailure<R, E>)
+            is GenericSuccess -> this.result
+            is GenericFailure<*> -> body(this as GenericFailure<R>)
         }
     }
 
     fun onErrorThrow(): R {
         return when (this) {
             is GenericSuccess -> result
-            is GenericFailure<*, *> -> throw cause
+            is GenericFailure<*> -> throw cause
         }
     }
 
@@ -39,10 +39,10 @@ sealed class Outcome<out R : Any?, out E : Exception> {
         return body()
     }
 
-    inline fun <R2, O : Outcome<R2, *>> flatMap(body: (R) -> O): Outcome<R2, E> {
+    inline fun <R2, O : Outcome<R2>> flatMap(body: (R) -> O): Outcome<R2> {
         return when (this) {
-            is GenericSuccess -> body(result) as Outcome<R2, E>
-            is GenericFailure<*, *> -> this
+            is GenericSuccess -> body(result)
+            is GenericFailure<*> -> this
         }
     }
 }
@@ -50,7 +50,7 @@ sealed class Outcome<out R : Any?, out E : Exception> {
 /**
  * Success outcome base
  */
-sealed class GenericSuccess<T>(val result: T) : Outcome<T, Exception>() {
+sealed class GenericSuccess<T>(val result: T) : Outcome<T>() {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -76,14 +76,13 @@ sealed class GenericSuccess<T>(val result: T) : Outcome<T, Exception>() {
 /**
  * Failure outcome base
  */
-sealed class GenericFailure<out R, out T : Exception>(val message: String? = null, val cause: T) :
-    Outcome<Nothing, T>() {
+sealed class GenericFailure<out R>(val message: String, open val cause: Exception) : Outcome<Nothing>() {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as GenericFailure<*, *>
+        other as GenericFailure<*>
 
         if (message != other.message) return false
         if (cause != other.cause) return false
@@ -92,7 +91,7 @@ sealed class GenericFailure<out R, out T : Exception>(val message: String? = nul
     }
 
     override fun hashCode(): Int {
-        var result = message?.hashCode() ?: 0
+        var result = message.hashCode()
         result = 31 * result + cause.hashCode()
         return result
     }
@@ -118,15 +117,16 @@ fun <T> Ok(value: T) = Success(value)
 /**
  * Base type for application-specific failure outcomes. May be used itself, if function has single kind of failure outcome
  */
-open class Failure<T : Exception>(message: String? = null, cause: T) : GenericFailure<Nothing, T>(message, cause)
+open class Failure<T : Exception>(override val cause: T, message: String = cause.message ?: cause.toString()) :
+    GenericFailure<Nothing>(message, cause)
 
 @Suppress("NOTHING_TO_INLINE")
 /**
  * Shorthand factory for Failure, using kotlin.Exception with the same message as actual cause
  */
-inline fun <T> Failure(msg: String): Outcome<T, Exception> = Failure(msg, Exception(msg))
+inline fun <T> Failure(msg: String): Outcome<T> = Failure(Exception(msg))
 
-inline fun <R> ergo(body: () -> Outcome<R, Exception>): Outcome<R, Exception> =
+inline fun <R> ergo(body: () -> Outcome<R>): Outcome<R> =
     try {
         body()
     } catch (e: Exception) {
