@@ -37,8 +37,8 @@ class DbModule(private val env: QEnv) {
         flyway.migrate()
     }
 
-    inline fun <T> transaction(crossinline body: (Transaction) -> Outcome<T>): Outcome<T> {
-        val res: Outcome<T> = ebeanDb.beginTransaction().use { trx ->
+    fun <T> transaction(body: (Transaction) -> Outcome<T>): Outcome<T> {
+        return ebeanDb.beginTransaction().use { trx ->
             try {
                 val res = body(trx)
                 if (res is Failure<*>) {
@@ -50,7 +50,6 @@ class DbModule(private val env: QEnv) {
                 Failure(cause = e)
             }
         }
-        return res
     }
 
 }
