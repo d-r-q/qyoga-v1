@@ -19,6 +19,8 @@ dependencies {
     implementation("io.ebean:ebean-annotation:6.12")
     implementation("javax.validation:validation-api:2.0.1.Final")
 
+    implementation("org.docx4j:docx4j-core:11.2.5")
+    implementation("org.docx4j:docx4j-JAXB-ReferenceImpl:11.2.5")
 }
 
 kapt {

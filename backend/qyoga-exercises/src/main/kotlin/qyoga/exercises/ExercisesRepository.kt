@@ -9,7 +9,9 @@ interface ExercisesRepository {
 
     fun fetch(page: ExercisesPage): List<ExerciseEditDto>
 
-    fun findFile(exId: Long, fileIndex: Int): Long?
+    fun fetch(exerciseIds: List<ExerciseId>): List<ExerciseEditDto>
+
+    fun findImage(exId: Long, fileIndex: Int): Long?
 
     fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto>
 

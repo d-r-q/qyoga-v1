@@ -20,4 +20,8 @@ class ExercisesService(
         return exercisesRepository.fetch(exercisesPage)
     }
 
+    fun fetch(exerciseIds: List<ExerciseId>): List<ExerciseEditDto> {
+        return exercisesRepository.fetch(exerciseIds)
+    }
+
 }

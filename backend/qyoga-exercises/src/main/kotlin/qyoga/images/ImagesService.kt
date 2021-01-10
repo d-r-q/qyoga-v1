@@ -1,7 +1,8 @@
-package qyoga.files
+package qyoga.images
 
 import qyoga.*
 import qyoga.db.DbModule
+import qyoga.db.asSequence
 import qyoga.domain.DomainId
 import java.sql.Statement
 
@@ -22,6 +23,24 @@ class ImagesService(private val dbModule: DbModule) {
             }
 
             Ok(Image(rs.getString("name"), rs.getString("content_type"), rs.getBytes("content")))
+        }
+    }
+
+    fun fetch(ids: List<Long>): Outcome<List<Image>> = dbModule.transaction { trx ->
+        trx.isReadOnly = true
+        with(trx.connection) {
+            val stmt = prepareStatement(
+                "SELECT name, content_type, content FROM images WHERE id IN (${
+                    ids.map { "?" }.joinToString(", ")
+                })"
+            ).apply {
+                ids.forEach { id -> setLong(1, id) }
+            }
+            val imgs = stmt.executeQuery().asSequence()
+                .map { Image(it["name"], it["content_type"], it["content"]) }
+                .toList()
+
+            Ok(imgs)
         }
     }
 

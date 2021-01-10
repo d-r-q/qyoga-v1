@@ -8,8 +8,8 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
 import io.ktor.utils.io.core.*
-import qyoga.files.Image
-import qyoga.files.ImagesModule
+import qyoga.images.Image
+import qyoga.images.ImagesModule
 import qyoga.web.respond
 
 object ImagesRouter {
@@ -19,7 +19,7 @@ object ImagesRouter {
             get("/{id}") {
                 val id: Long by call.parameters
                 val file = imagesModule.imagesService.fetch(id)
-                    .ifError {
+                    .onError {
                         respond(it)
                         return@get
                     }

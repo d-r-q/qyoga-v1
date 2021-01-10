@@ -1,4 +1,4 @@
-package qyoga.files
+package qyoga.images
 
 import qyoga.db.DbModule
 

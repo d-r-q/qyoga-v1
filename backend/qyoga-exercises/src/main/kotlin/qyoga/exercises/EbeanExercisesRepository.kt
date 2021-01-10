@@ -20,18 +20,25 @@ internal class EbeanExercisesRepository(
             .orderBy("name")
             .setMaxRows(page.amount)
             .findList() as List<StoredExercise>
-        val tagIds = exercises.flatMap { it.tags }
-        val tags = tagIds.resolve(db).associateBy { it.id }
-        val images =
-            if (exercises.isNotEmpty()) {
-                findImages(exercises.map { it.id })
-            } else {
-                emptyMap()
-            }
-        return exercises.map { it.toEditDto(tags, images[it.id] ?: emptyList()) }
+        return exercises.toEditDtos()
     }
 
-    override fun findFile(exId: Long, fileIndex: Int): Long? {
+    override fun fetch(exerciseIds: List<ExerciseId>): List<ExerciseEditDto> {
+        val exercises = db.find(ExerciseEntity::class.java)
+            .where()
+            .`in`("id", exerciseIds.map { it.value })
+            .findList() as List<StoredExercise>
+        return exercises.toEditDtos()
+    }
+
+    private fun List<ExerciseEntity<ExerciseId>>.toEditDtos(): List<ExerciseEditDto> {
+        val tagIds = flatMap { it.tags }
+        val tags = tagIds.resolve(db).associateBy { it.id }
+        val images = findImages(map { it.id })
+        return map { it.toEditDto(tags, images[it.id] ?: emptyList()) }
+    }
+
+    override fun findImage(exId: Long, fileIndex: Int): Long? {
         return db.sqlQuery("SELECT image_id FROM exercises_images ei WHERE ei.exercise_id = :id AND index = :idx")
             .setParameter("id", exId)
             .setParameter("idx", fileIndex)
@@ -40,6 +47,10 @@ internal class EbeanExercisesRepository(
     }
 
     private fun findImages(exIds: Collection<ExerciseId>): Map<ExerciseId, List<Long>> {
+        if (exIds.isEmpty()) {
+            return emptyMap()
+        }
+
         val query = """SELECT exercise_id, image_id 
             |          FROM exercises_images ei 
             |          WHERE ei.exercise_id IN (:ids) 
@@ -63,7 +74,7 @@ internal class EbeanExercisesRepository(
             this as StoredExercise
         }
         updateExerciseImages(storedEntity.id, exercise.images)
-            .ifError { return it }
+            .onError { return it }
         return Success(storedEntity.toEditDto(tags.associateBy { it.id }, exercise.images))
     }
 

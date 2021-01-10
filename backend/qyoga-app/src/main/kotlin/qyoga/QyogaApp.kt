@@ -11,15 +11,18 @@ import io.ktor.routing.*
 import org.slf4j.event.Level
 import qyoga.db.DbModule
 import qyoga.exercises.ExercisesCrudModule
-import qyoga.files.ImagesModule
+import qyoga.images.ImagesModule
+import qyoga.programs.ProgramsModule
 import qyoga.routing.ExercisesCrudRouter.exercises
 import qyoga.routing.ImagesRouter.images
+import qyoga.routing.ProgramsRouter.programs
 
 class QyogaModule(env: QEnv) {
 
     val dbModule = DbModule(env)
-    val filesModule = ImagesModule(dbModule)
+    val imagesModule = ImagesModule(dbModule)
     val exercisesModule = ExercisesCrudModule(dbModule)
+    val programsModule = ProgramsModule(exercisesModule.exercisesService, imagesModule.imagesService)
 
 }
 
@@ -42,6 +45,8 @@ fun Application.main() {
     }
     install(Routing) {
         exercises(qyoga.exercisesModule)
-        images(qyoga.filesModule)
+        images(qyoga.imagesModule)
+        programs(qyoga.programsModule)
     }
+
 }
