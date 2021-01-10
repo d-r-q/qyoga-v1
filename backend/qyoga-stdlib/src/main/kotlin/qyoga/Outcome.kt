@@ -21,7 +21,13 @@ fun panic(msg: String): Nothing = throw AssertionError(msg)
 @Suppress("UNCHECKED_CAST")
 sealed class Outcome<out R : Any?> {
 
-    inline fun ifError(body: (GenericFailure<R>) -> Nothing): R {
+    inline fun onSuccess(body: (R) -> Unit) {
+        if (this is GenericSuccess) {
+            body(this.result)
+        }
+    }
+
+    inline fun onError(body: (GenericFailure<R>) -> Nothing): R {
         return when (this) {
             is GenericSuccess -> this.result
             is GenericFailure<*> -> body(this as GenericFailure<R>)
@@ -35,16 +41,13 @@ sealed class Outcome<out R : Any?> {
         }
     }
 
-    inline fun <E> recover(body: () -> E): E {
-        return body()
-    }
-
     inline fun <R2, O : Outcome<R2>> flatMap(body: (R) -> O): Outcome<R2> {
         return when (this) {
             is GenericSuccess -> body(result)
             is GenericFailure<*> -> this
         }
     }
+
 }
 
 /**
