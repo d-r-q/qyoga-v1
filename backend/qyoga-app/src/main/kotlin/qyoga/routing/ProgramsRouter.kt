@@ -8,7 +8,6 @@ import io.ktor.routing.*
 import io.ktor.util.*
 import io.ktor.utils.io.jvm.javaio.*
 import qyoga.NotFound
-import qyoga.Ok
 import qyoga.exercises.ExerciseId
 import qyoga.programs.ProgramId
 import qyoga.programs.ProgramsModule
@@ -26,7 +25,16 @@ object ProgramsRouter {
             post {
                 val req = call.receive<GenerateProgramRequest>()
                 val id = programsModule.generateProgram(req.title, req.exercises.map(::ExerciseId))
-                respond(Ok(id))
+                //respond(Ok(id))
+
+                val docx = programsModule.getProgram(id)
+                if (docx == null) {
+                    respond(NotFound(id))
+                    return@post
+                }
+                call.respondBytesWriter(ContentType.defaultForFileExtension("docx")) {
+                    docx.copyTo(this.toOutputStream())
+                }
             }
             get("/{id}") {
                 val id: Long by call.parameters

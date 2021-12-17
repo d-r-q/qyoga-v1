@@ -21,6 +21,9 @@ dependencies {
 
     implementation("org.docx4j:docx4j-core:11.2.5")
     implementation("org.docx4j:docx4j-JAXB-ReferenceImpl:11.2.5")
+
+    implementation("org.apache.poi:poi-ooxml:4.1.2")
+    implementation("org.apache.poi:ooxml-schemas:1.4")
 }
 
 kapt {

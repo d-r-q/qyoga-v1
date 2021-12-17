@@ -10,7 +10,7 @@ plugins {
 
 allprojects {
     group = "gyoga"
-    version = "21.01.1"
+    version = "21.01.2"
 }
 
 allprojects {

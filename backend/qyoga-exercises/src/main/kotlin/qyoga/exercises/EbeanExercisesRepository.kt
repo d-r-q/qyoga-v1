@@ -33,7 +33,7 @@ internal class EbeanExercisesRepository(
 
     private fun List<ExerciseEntity<ExerciseId>>.toEditDtos(): List<ExerciseEditDto> {
         val tagIds = flatMap { it.tags }
-        val tags = tagIds.resolve(db).associateBy { it.id }
+        val tags = tagIds.resolve(db).associateBy { it -> it.id }
         val images = findImages(map { it.id })
         return map { it.toEditDto(tags, images[it.id] ?: emptyList()) }
     }
