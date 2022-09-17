@@ -151,6 +151,7 @@ class ExercisesDashboardView : View(), CoroutineScope by MainScope() {
                 }
             } catch (e: Exception) {
                 error("Ошибка", "Не удалось загрузить список упражнений")
+                e.printStackTrace()
             }
         }
     }

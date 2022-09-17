@@ -13,7 +13,7 @@ class ImagesService(private val dbModule: DbModule) {
     fun fetch(id: Long): Outcome<Image> = dbModule.transaction {
         it.isReadOnly = true
         with(it.connection) {
-            val stmt = prepareStatement("SELECT name, content_type, content FROM images WHERE id = ?").apply {
+            val stmt = prepareStatement("SELECT id, name, content_type, content FROM images WHERE id = ?").apply {
                 setLong(1, id)
             }
             val rs = stmt.executeQuery()
@@ -22,26 +22,29 @@ class ImagesService(private val dbModule: DbModule) {
                 return@transaction NotFound(ImageId(id))
             }
 
-            Ok(Image(rs.getString("name"), rs.getString("content_type"), rs.getBytes("content")))
+            Ok(Image(rs.getString("name"), rs.getString("content_type"), rs.getBytes("content"), rs.getLong("id")))
         }
     }
 
-    fun fetch(ids: List<Long>): Outcome<List<Image>> = dbModule.transaction { trx ->
-        trx.isReadOnly = true
-        with(trx.connection) {
-            val stmt = prepareStatement(
-                "SELECT name, content_type, content FROM images WHERE id IN (${
-                    ids.map { "?" }.joinToString(", ")
-                })"
-            ).apply {
-                ids.forEach { id -> setLong(1, id) }
-            }
-            val imgs = stmt.executeQuery().asSequence()
-                .map { Image(it["name"], it["content_type"], it["content"]) }
-                .toList()
+    fun fetch(ids: List<Long>): List<Image> {
+        val res = dbModule.transaction { trx ->
+            trx.isReadOnly = true
+            with(trx.connection) {
+                val stmt = prepareStatement(
+                    "SELECT id, name, content_type, content FROM images WHERE id IN (${
+                        ids.map { "?" }.joinToString(", ")
+                    })"
+                ).apply {
+                    ids.forEachIndexed { index, id -> setLong(index + 1, id) }
+                }
+                val imgs = stmt.executeQuery().asSequence()
+                    .map { Image(it["name"], it["content_type"], it["content"], it["id"]) }
+                    .toList()
 
-            Ok(imgs)
+                Ok(imgs)
+            }
         }
+        return res.onErrorThrow()
     }
 
     fun save(img: Image): Outcome<Long> = dbModule.transaction {

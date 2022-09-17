@@ -82,6 +82,7 @@ class Exercises(config: ConfigProperties) {
         }
     }
 
-    fun imageUrls(it: ExerciseEditDto): List<String> = it.imageUrls(baseUrl)
+    fun imageUrls(it: ExerciseEditDto): List<String> =
+        it.instructions.mapNotNull { it.imageUrl(baseUrl) }
 
 }

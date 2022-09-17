@@ -16,7 +16,7 @@ class ProgramsModule(
     fun generateProgram(title: String, programExerciseIds: List<ExerciseId>): ProgramId {
         val programExercises = exercises.fetch(programExerciseIds)
         val id = ProgramId(programs.size.toLong())
-        programs[id] = generateProgram(Program(title, programExercises), images::fetch)
+        programs[id] = generateProgramPoi(Program(title, programExercises), images::fetch)
         return id
     }
 

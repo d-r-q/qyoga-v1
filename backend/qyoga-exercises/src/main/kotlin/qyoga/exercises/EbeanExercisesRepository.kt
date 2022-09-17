@@ -3,6 +3,8 @@ package qyoga.exercises
 import io.ebean.Database
 import qyoga.*
 import qyoga.api.exercises.ExerciseEditDto
+import qyoga.api.exercises.StepDto
+import qyoga.api.exercises.images
 import qyoga.db.DomainIdConverter
 import qyoga.db.resolve
 import qyoga.api.exercises.Tag as ApiTag
@@ -33,7 +35,7 @@ internal class EbeanExercisesRepository(
 
     private fun List<ExerciseEntity<ExerciseId>>.toEditDtos(): List<ExerciseEditDto> {
         val tagIds = flatMap { it.tags }
-        val tags = tagIds.resolve(db).associateBy { it.id }
+        val tags = tagIds.resolve(db).associateBy { it: TagEntity<TagId> -> it.id }
         val images = findImages(map { it.id })
         return map { it.toEditDto(tags, images[it.id] ?: emptyList()) }
     }
@@ -73,9 +75,9 @@ internal class EbeanExercisesRepository(
             }
             this as StoredExercise
         }
-        updateExerciseImages(storedEntity.id, exercise.images)
+        updateExerciseImages(storedEntity.id, exercise.images())
             .onError { return it }
-        return Success(storedEntity.toEditDto(tags.associateBy { it.id }, exercise.images))
+        return Success(storedEntity.toEditDto(tags.associateBy { it.id }, exercise.images()))
     }
 
     private fun mergeTags(tags: List<ApiTag>): List<StoredTag> {
@@ -128,12 +130,11 @@ private fun StoredExercise.toEditDto(tagsEntities: Map<TagId, StoredTag>, images
         id = this.id.value,
         name = this.name,
         description = this.description,
-        instructions = this.instructions,
+        instructions = this.instructions.map { StepDto(it.description, it.image) },
         duration = this.duration,
         tags = this.tags.map {
             ApiTag(tagsEntities[it]?.name ?: throw IllegalArgumentException("Cannot resolve tag for id $it"))
         },
-        images = images
     )
 
 fun ExerciseEditDto.toEntity(tags: List<TagId>): Exercise {
@@ -141,7 +142,7 @@ fun ExerciseEditDto.toEntity(tags: List<TagId>): Exercise {
         id?.let { ExerciseId(it) },
         name,
         description,
-        instructions,
+        instructions.map { Step(it.description, it.imageId) },
         duration,
         tags
     )

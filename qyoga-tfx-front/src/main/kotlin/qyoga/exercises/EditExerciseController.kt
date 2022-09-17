@@ -11,7 +11,7 @@ import tornadofx.seconds
 import java.io.File
 import java.net.URI
 import java.nio.file.Files
-import java.util.concurrent.TimeUnit
+import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 
@@ -40,14 +40,14 @@ class EditExerciseController : Controller() {
                     }
                 }
             }
-            val res = exercises.send(viewModel.toDto().copy(images = imageIds))
+            val res = exercises.send(viewModel.toDto(imageIds))
             println("Got $res")
             res
         }
         val modalJob = scope.async { find<SavingDialog>().openModal(escapeClosesWindow = false) }
         val saveRes =
             try {
-                withTimeoutOrNull(5.toDuration(TimeUnit.SECONDS)) {
+                withTimeoutOrNull(5.toDuration(DurationUnit.SECONDS)) {
                     saveJob.await()
                 }
             } finally {

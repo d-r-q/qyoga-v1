@@ -1,12 +1,14 @@
 package qyoga.exercises
 
-import io.ktor.http.*
 import javafx.collections.ObservableList
 import javafx.geometry.Pos
 import javafx.scene.layout.Priority
 import javafx.util.StringConverter
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import qyoga.api.exercises.ExerciseEditDto
+import qyoga.api.exercises.StepDto
 import qyoga.api.exercises.Tag
 import qyoga.components.boundedImageChooser
 import tornadofx.*
@@ -127,7 +129,7 @@ class EditExerciseViewModel(var dest: ExerciseEditDto) : ViewModel() {
     private var id: Long? = null
     val name = stringProperty(dest.name)
     val descr = stringProperty(dest.description)
-    val instructions = stringProperty(dest.instructions)
+    val instructions = stringProperty(dest.renderInstructions())
     val duration = intProperty(dest.duration.seconds.toInt())
     val tags = listProperty(dest.tags.asObservable())
     val image1 = stringProperty(null)
@@ -138,7 +140,7 @@ class EditExerciseViewModel(var dest: ExerciseEditDto) : ViewModel() {
         id = dest.id
         name.set(dest.name)
         descr.set(dest.description)
-        instructions.set(dest.instructions)
+        instructions.set(dest.renderInstructions())
         duration.set(dest.duration.seconds.toInt())
         tags.set(dest.tags.asObservable())
         val imageUrls = resolveImageUrls(dest)
@@ -146,27 +148,26 @@ class EditExerciseViewModel(var dest: ExerciseEditDto) : ViewModel() {
         image2.set(imageUrls.getOrNull(1))
     }
 
-    fun toDto(): ExerciseEditDto {
+    fun toDto(imageIds: List<Long>): ExerciseEditDto {
         return ExerciseEditDto(
             id,
             name.get(),
             descr.get(),
-            instructions.get(),
+            ExerciseEditDto.parseInstructions(instructions.get(), imageIds),
             Duration.ofSeconds(duration.get().toLong()),
-            tags.get(),
-            emptyList()
+            tags.get()
         )
     }
 
     fun images(): List<Img> {
         return listOfNotNull(
-            image1.get()?.let { if (it.startsWith("http")) ImageId(dest.images[0]) else ImageUrl(it) },
-            image2.get()?.let { if (it.startsWith("http")) ImageId(dest.images[1]) else ImageUrl(it) }
+            image1.get()?.let { if (it.startsWith("http")) ImageId(dest.instructions[0].imageId!!) else ImageUrl(it) },
+            image2.get()?.let { if (it.startsWith("http")) ImageId(dest.instructions[1].imageId!!) else ImageUrl(it) }
         )
     }
 }
 
-val newEditExerciseModel = ExerciseEditDto(null, "", "", "", Duration.ZERO, emptyList(), emptyList())
+val newEditExerciseModel = ExerciseEditDto(null, "", "", emptyList<StepDto>(), Duration.ZERO, emptyList())
 
 object TagsToString : StringConverter<ObservableList<Tag>>() {
 
