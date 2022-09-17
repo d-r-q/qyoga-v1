@@ -11,8 +11,6 @@ interface ExercisesRepository {
 
     fun fetch(exerciseIds: List<ExerciseId>): List<ExerciseEditDto>
 
-    fun findImage(exId: Long, fileIndex: Int): Long?
-
     fun persistExercise(exercise: ExerciseEditDto): Outcome<ExerciseEditDto>
 
 }
